@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-system('./matrS.exe lala');
+use Time::HiRes qw(time usleep); 
 system('./matrS.exe lala &');
 $a = `ps -A`;
 @a = split('\n',$a);
@@ -9,21 +9,16 @@ for(@a)
     {
 	@tmp = split(' ',$_);
 	$pid = @tmp[0];
-	print $pid;
+	print "pid=$pid\r\n";
     }
 }
-$proc;
-for(1.20)
+$proc=0;
+while(!system("taskset -pc $proc $pid"))
 {
-    if($_%2)
-    {
-	$proc = 1;
-    }
-    else
-    {
-	$proc = 2;
-    }
-    system("taskset $proc -p $pid");
-    sleep2;
-    
+    $proc++;
+    $proc=$proc%2;
+#    sleep 1;
+    usleep 100;
 }
+print "One proc\r\n";
+system('./matrS.exe lala');

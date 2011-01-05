@@ -15,7 +15,7 @@ char *argv[];
 	{
     	    flag = 1;
         }
-	fprintf (stderr, "%s %d\n","flag", flag);
+//	fprintf (stderr, "%s %d\n","flag", flag);
 	int **matr = malloc(10000*sizeof(int *));
 	int i,j;
 	for(i=0; i<10000; i++)
@@ -51,7 +51,7 @@ char *argv[];
 		free(matr[i]);
 	}
 	free(matr);
-	fprintf (stderr, "%s %d\n","result", s);
+//	fprintf (stderr, "%s %d\n","result", s);
 	
     }
     time_t t2 = time(NULL);
