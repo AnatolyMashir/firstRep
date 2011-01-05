@@ -9,15 +9,8 @@ int mergeSort(int* buf, long int start, long int size)
 	if(size>1)
 	{
 		int size1,size2;
-		if(size%2)
-		{
-			size1=(int)(size/2)+1;
-			size2=(int)(size/2);
-		}
-		else
-		{
-			size1=size2=(int)(size/2);
-		}
+		size2 = size/2; 
+		size1 = size - size2;
 		if(mergeSort(buf, start,size1) || mergeSort(buf, start+size1,size2))
 		{
 			return 1;
@@ -26,7 +19,6 @@ int mergeSort(int* buf, long int start, long int size)
 		if(tmp==NULL)
 		{
 			fprintf (stderr, "Хозяина, памяти мала\n");
-			fcloseall();
 			return 1;
 		}
 		long int i=0,j=0,k=0;
@@ -77,10 +69,10 @@ char *argv[];
         fprintf (stderr, "Недостаточно аргументов\n");
         return 1;
     }
-	FILE *files[argc-1];
+    FILE *files[argc-1];
     FILE *stream;
     int i;
-	if ((stream=fopen(argv[argc-1], "w"))==NULL)
+    if ((stream=fopen(argv[argc-1], "w"))==NULL)
     {
         fprintf (stderr, "%s не может открыть файл %s\n",
         argv[0], argv[argc-1]);
@@ -99,66 +91,72 @@ char *argv[];
 		files[i] = stream;
     }
     struct node first;
-	first.data = 11111;
-	first.next = NULL;
-	struct node *cur = &first;
-	long int count = 0;
-	for(i=1; i<argc-1; i++)
+    first.data = 11111;
+    first.next = NULL;
+    struct node *cur = &first;
+    long int count = 0;
+    for(i=1; i<argc-1; i++)
     {
         stream = files[i];
-		int err = err = fscanf(stream,"%d", &value);
+	int err = err = fscanf(stream,"%d", &value);
         while(err!=0 && err!=EOF)
         {
-			struct node *tmp = malloc(sizeof(struct node));
-			count++;
-			if(tmp==NULL)
-			{
-				fprintf (stderr, "Хозяина, памяти мала\n");
-				fcloseall();
-				return 1;
-			}
-			tmp->data = value;
-			tmp->next = NULL;
-			cur->next = tmp;
-			cur = cur->next;
-			err = fscanf(stream,"%d", &value);
-        }
-		if(err==0)
+		struct node *tmp = malloc(sizeof(struct node));
+		count++;
+		if(tmp==NULL)
 		{
-			fprintf (stderr, "Недопустимые символы в файле %s\n",
-            argv[i]);
+			fprintf (stderr, "Хозяина, памяти мала\n");
+			fcloseall();
 			return 1;
 		}
-    }
-	int *buf = malloc(count*sizeof(int *));
-	if(buf==NULL)
-	{
-		fprintf (stderr, "Хозяина, памяти мала\n");
-				fcloseall();
-				return 1;
-	}
-	long int j = 0;
-	cur = first.next;
-	while(cur!=NULL)
-    {
-		buf[j] = cur->data;
+		tmp->data = value;
+		tmp->next = NULL;
+		cur->next = tmp;
 		cur = cur->next;
-		if(cur!=NULL)
-		{
-			j++;
-		}
-	}
-	del(first.next);
-	if(!mergeSort(buf, 0, j+1))
+		err = fscanf(stream,"%d", &value);
+        }
+	if(err==0)
 	{
-		stream = files[0];
-		for(i=0; i<=j; i++)
-		{
-			fprintf(stream,"%d\n", buf[i]);
-		}
+	    fprintf (stderr, "Недопустимые символы в файле %s\n",
+	    argv[i]);
+	    return 1;
 	}
-	free(buf);
-	            fcloseall();
+    }
+    int *buf = malloc(count*sizeof(int *));
+    if(buf==NULL)
+    {
+	fprintf (stderr, "Хозяина, памяти мала\n");
+	fcloseall();
+	return 1;
+    }
+    long int j = 0;
+    cur = first.next;
+    while(cur!=NULL)
+    {
+	buf[j] = cur->data;
+	cur = cur->next;
+	if(cur!=NULL)
+	{
+		j++;
+	}
+    }
+    del(first.next);
+    if(!mergeSort(buf, 0, j+1))
+    {
+    	stream = files[0];
+    	for(i=0; i<=j; i++)
+    	{
+		fprintf(stream,"%d\n", buf[i]);
+	}
+    }
+    else
+    {//not enough memory to merge
+        fprintf (stderr, "Хозяина, памяти мала\n");
+        free(buf);
+        fcloseall();
+        return 1; // error signal out
+    }
+    free(buf);
+    fcloseall();
     return 0;
 }
-
