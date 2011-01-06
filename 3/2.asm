@@ -18,7 +18,7 @@
 	je _printErr
 	mov si, mes
 _print:
-	mov cx, 512h
+	mov cx, 512
 	mov ah ,0eh
 	mov bh, 0
 	mov bl, 0
