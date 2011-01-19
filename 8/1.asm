@@ -45,11 +45,11 @@ _seg:
 	
     LIDT [IDT_Load]
     LGDT [GDT_Load]
-    mov bx,	1
-    LMSW bx
+    
+    mov eax, cr0
+    or al, 1
+    mov cr0, eax
 
-    mov	ax, 8*2
-    mov	ss, ax
     jmp	8:_code
 GDT_Load:
     dw	gdtLen
