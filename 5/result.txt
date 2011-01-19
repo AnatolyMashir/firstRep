@@ -1,0 +1,30 @@
+size of matr 5000
+summation by row
+cpu set: 0 1
+time work 1
+summation by column
+cpu set: 0 1
+time work 3
+
+size of matr 7000
+summation by row
+cpu set: 0 1
+time work 1
+summation by column
+cpu set: 0 1
+time work 7
+
+size of matr 10000
+summation by row
+cpu set: 0 1
+time work 3
+summation by column
+cpu set: 0 1
+time work 13
+
+size of matr 15000
+cpu set: 0 1
+time work 7
+summation by column
+cpu set: 0 1
+time work 34
