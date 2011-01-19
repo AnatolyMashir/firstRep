@@ -1,0 +1,18 @@
+Программа - двукратный запуск сложения матрицы по колонкам
+
+set affinity on
+
+sleep betweem set afinity 0 ms=microseconds
+time work 33
+sleep between set afinity 20 ms
+time work 30
+sleep between set afinity 5000 ms
+time work 29
+sleep between set afinity 10000 ms
+time work 28
+sleep between set afinity 100000 ms
+time work 27
+
+set affinity off
+
+time work 27
