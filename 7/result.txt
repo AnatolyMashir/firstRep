@@ -1,0 +1,49 @@
+M = 100 000 000 
+near allocate
+thread1 work on cpu 0
+thread2 work on cpu 1
+time work 2
+far allocate
+thread1 work on cpu 0
+thread2 work on cpu 1
+time work 1
+
+M = 200 000 000
+near allocate
+thread1 work on cpu 0
+thread2 work on cpu 1
+time work 5
+far allocate
+thread1 work on cpu 0
+thread2 work on cpu 1
+time work 1
+
+M = 500 000 000 
+near allocate
+thread1 work on cpu 0
+thread2 work on cpu 1
+time work 13
+far allocate
+thread1 work on cpu 0
+thread2 work on cpu 1
+time work 2
+
+M = 800 000 000
+near allocate
+thread1 work on cpu 0
+thread2 work on cpu 1
+time work 19
+far allocate
+thread1 work on cpu 0
+thread2 work on cpu 1
+time work 3
+
+M = 1 000 000 000
+near allocate
+thread1 work on cpu 0
+thread2 work on cpu 1
+time work 22
+far allocate
+thread1 work on cpu 0
+thread2 work on cpu 1
+time work 4
