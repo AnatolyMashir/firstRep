@@ -25,8 +25,8 @@ int main()
 		if(fprintf(stderr, "%s\n","some trouble with mask")==-1)
 		{
 			perror(printfErrorMessage);
-			return EXIT_FAILURE;
 		}
+		return EXIT_FAILURE;
 	}
 
 	for(i=1; i<32; ++i)
@@ -35,8 +35,8 @@ int main()
 			if(fprintf(stderr, "%s\n","can't set signal")==-1)
 			{
 				perror(printfErrorMessage);
-				return EXIT_FAILURE;
 			}
+			return EXIT_FAILURE;
 		}
 	
 	while(flag);
