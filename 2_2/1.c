@@ -1,23 +1,31 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <signal.h>
+#include <errno.h>
 
 const char *printfErrorMessage = "some trouble with printf";
 
-volatile int flag = 1;
+int pipefd[2];
 
 void sigHandler(int number, siginfo_t *info, void *something)
 {
-	printf("Hello, signal %d!\n",info->si_signo);
+	write(pipefd[1], &number, sizeof(number));
 	if(number==20)
-		flag=0;
+		 close(pipefd[1]);
 }
 
 int main()
 {
 	struct sigaction S;
-	int i;
+	int i, number;
 	
+	if (pipe(pipefd) == -1) 
+	{
+		perror("pipe fail");
+        return EXIT_FAILURE;
+    }
+
 	S.sa_sigaction = sigHandler;
 	S.sa_flags = SA_SIGINFO;
 	if(sigfillset(&S.sa_mask))
@@ -38,8 +46,12 @@ int main()
 			}
 			return EXIT_FAILURE;
 		}
-	
-	while(flag);
-	return EXIT_SUCCESS;
-}
 
+	do
+	{
+		if(read(pipefd[0], &number, sizeof(number)) > 0)
+			printf("Hello, signal %d! pid=%d, gid=%d\n", number, getpid(), getgid());
+	}
+	while(number != 20);
+	return 0;
+}
