@@ -21,10 +21,8 @@ while read md5 size filename;
 	do 
 		for name in "${!ideal[@]}"; 
 			do 
-				if [[ $filename == "$name" ]]; then
-					if [[ "$md5::$size" != "${ideal["$name"]}" ]]; then
+				if [[ $filename == "$name" && "$md5::$size" != "${ideal["$name"]}" ]]; then
 					echo "$filename was ${ideal["$name"]}, now $md5::$size."
-					fi
-				fi
+				fi;
 			done
 done <"./$2"
