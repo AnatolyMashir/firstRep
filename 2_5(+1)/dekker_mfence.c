@@ -7,7 +7,7 @@
 #define mfence asm volatile ("mfence" : : : "memory")
 
 const char *printfErrorMessage = "some trouble with printf";
-int flag[2] = {false,false};
+volatile int flag[2] = {false,false};
 volatile int turn = 0;
 volatile int criticalResource = 0;
 
