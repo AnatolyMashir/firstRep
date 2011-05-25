@@ -3,21 +3,24 @@
 #include <unistd.h>
 #include <sys/poll.h>
 
+#define TIMEOUT 1
+
 const char *printfErrorMessage = "some trouble with printf";
-int *endStream, ret, count=0;
+int *endStream, *numbers, ret, count=0, countLive;
 char buf[128];
-struct pollfd fds[100];
+struct pollfd *fds;
 
 void closeAndExit()
 {
 	free(endStream);
+	free(fds);
 	exit(EXIT_FAILURE);
 }
 	
 void tryRead()
 {
 	int i;
-	ret = poll(fds, count, -1);
+	ret = poll(fds, count, TIMEOUT);
 	if(ret == -1)
 	{
 		if(fprintf(stderr, "%s\n","some trouble with poll")==-1)
@@ -26,19 +29,43 @@ void tryRead()
 		}
 		closeAndExit();
 	}
-	for(i=0; i<count; i++)
+	if(ret != 0)
 	{
-		if(!endStream[i])
+		for(i=0; i<count; i++)
 		{
-			if(fds[i].revents & POLLNVAL)
+			if(!endStream[i])
 			{
-				endStream[i]=1;
-				count--;
-			}
-			else if(fds[i].revents & POLLOUT)
-			{
-				int result = read(fds[i].fd, buf, 20);
-				if(result==-1)
+				if((fds[i].revents & POLLNVAL) || (fds[i].revents & POLLHUP) || (fds[i].revents & POLLERR))
+				{
+					endStream[i]=1;
+					countLive--;
+				}
+				else if(fds[i].revents & POLLIN)
+				{
+					int result = read(fds[i].fd, buf, 20);
+					if(result==-1)
+					{
+						if(fprintf(stdout, "%s %d\n","I can not read file", i)==-1)
+						{
+							perror(printfErrorMessage);
+							closeAndExit();
+						}
+						endStream[i]=1;
+						countLive--;
+					}
+					else if(result == 0)
+					{
+						endStream[i]=1;
+						countLive--;
+						//fprintf(stdout, "i close %d countLive %d\n", i, countLive);
+						
+					}
+					else
+					{
+						write(1, buf, result);
+					}	
+				}/*
+				else
 				{
 					if(fprintf(stdout, "%s %d\n","I can not read file", i)==-1)
 					{
@@ -47,21 +74,7 @@ void tryRead()
 					}
 					endStream[i]=1;
 					count--;
-				}
-				else
-				{
-					write(1, buf, result);
-				}	
-			}
-			else
-			{
-				if(fprintf(stdout, "%s %d\n","I can not read file", i)==-1)
-				{
-					perror(printfErrorMessage);
-					closeAndExit();
-				}
-				endStream[i]=1;
-				count--;
+				}*/
 			}
 		}
 	}
@@ -72,6 +85,13 @@ int main(int argc,char *argv[])
 	int i;
 	int file;
 	endStream = malloc((argc-1)*sizeof(int));
+	fds = (struct pollfd *)malloc((argc-1)*sizeof(struct pollfd*));
+	if(endStream==NULL || fds==NULL)
+	{
+		puts("Error: not enough memory");
+		return 2;
+	}
+
 	for(i=0; i<argc; i++)
 	{
 		endStream[i]=0;
@@ -82,10 +102,11 @@ int main(int argc,char *argv[])
 		if(sscanf(argv[i], "%d", &file))
 		{
 			fds[count].fd = file;
-			fds[count++].events = POLLOUT;
+			fds[count++].events = POLLIN | POLLNVAL | POLLERR | POLLHUP;
 		}
 	}
-	while(count)
+	countLive = count;
+	while(countLive)
 	{
 		//fprintf(stdout, "%s\n","I can not read file");
 		tryRead();
