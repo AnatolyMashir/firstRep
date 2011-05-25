@@ -45,17 +45,18 @@ Disassembly of section .note.gnu.build-id:
  8048174:	47                   	inc    %edi
  8048175:	4e                   	dec    %esi
  8048176:	55                   	push   %ebp
- 8048177:	00 e6                	add    %ah,%dh
- 8048179:	bd f0 8c ee 32       	mov    $0x32ee8cf0,%ebp
- 804817e:	b0 34                	mov    $0x34,%al
- 8048180:	aa                   	stos   %al,%es:(%edi)
- 8048181:	80 6b f6 1e          	subb   $0x1e,-0xa(%ebx)
- 8048185:	47                   	inc    %edi
- 8048186:	3f                   	aas    
- 8048187:	fc                   	cld    
- 8048188:	ab                   	stos   %eax,%es:(%edi)
- 8048189:	d9 20                	fldenv (%eax)
- 804818b:	2b                   	.byte 0x2b
+ 8048177:	00 f3                	add    %dh,%bl
+ 8048179:	cf                   	iret   
+ 804817a:	ae                   	scas   %es:(%edi),%al
+ 804817b:	e8 d3 89 7d 10       	call   18820b53 <_end+0x107d6cb7>
+ 8048180:	d7                   	xlat   %ds:(%ebx)
+ 8048181:	86 4a f2             	xchg   %cl,-0xe(%edx)
+ 8048184:	d4 be                	aam    $0xffffffbe
+ 8048186:	52                   	push   %edx
+ 8048187:	6e                   	outsb  %ds:(%esi),(%dx)
+ 8048188:	bf                   	.byte 0xbf
+ 8048189:	67 a5                	addr16 movsl %ds:(%si),%es:(%di)
+ 804818b:	62                   	.byte 0x62
 
 Disassembly of section .gnu.hash:
 
@@ -85,22 +86,21 @@ Disassembly of section .dynsym:
 
 080481bc <.dynsym>:
 	...
- 80481cc:	4b                   	dec    %ebx
+ 80481cc:	34 00                	xor    $0x0,%al
 	...
- 80481d5:	00 00                	add    %al,(%eax)
- 80481d7:	00 12                	add    %dl,(%edx)
- 80481d9:	00 00                	add    %al,(%eax)
- 80481db:	00 67 00             	add    %ah,0x0(%edi)
+ 80481d6:	00 00                	add    %al,(%eax)
+ 80481d8:	12 00                	adc    (%eax),%al
+ 80481da:	00 00                	add    %al,(%eax)
+ 80481dc:	67 00 00             	addr16 add %al,(%bx,%si)
 	...
- 80481e6:	00 00                	add    %al,(%eax)
- 80481e8:	20 00                	and    %al,(%eax)
- 80481ea:	00 00                	add    %al,(%eax)
- 80481ec:	11 00                	adc    %eax,(%eax)
+ 80481e7:	00 20                	add    %ah,(%eax)
+ 80481e9:	00 00                	add    %al,(%eax)
+ 80481eb:	00 11                	add    %dl,(%ecx)
 	...
- 80481f6:	00 00                	add    %al,(%eax)
- 80481f8:	20 00                	and    %al,(%eax)
- 80481fa:	00 00                	add    %al,(%eax)
- 80481fc:	c3                   	ret    
+ 80481f5:	00 00                	add    %al,(%eax)
+ 80481f7:	00 20                	add    %ah,(%eax)
+ 80481f9:	00 00                	add    %al,(%eax)
+ 80481fb:	00 c3                	add    %al,%bl
 	...
  8048205:	00 00                	add    %al,(%eax)
  8048207:	00 12                	add    %dl,(%edx)
@@ -127,7 +127,7 @@ Disassembly of section .dynsym:
  8048245:	00 00                	add    %al,(%eax)
  8048247:	00 12                	add    %dl,(%edx)
  8048249:	00 00                	add    %al,(%eax)
- 804824b:	00 34 00             	add    %dh,(%eax,%eax,1)
+ 804824b:	00 41 00             	add    %al,0x0(%ecx)
 	...
  8048256:	00 00                	add    %al,(%eax)
  8048258:	12 00                	adc    (%eax),%al
@@ -185,19 +185,20 @@ Disassembly of section .dynstr:
  80482cf:	00 70 74             	add    %dh,0x74(%eax)
  80482d2:	68 72 65 61 64       	push   $0x64616572
  80482d7:	5f                   	pop    %edi
- 80482d8:	73 65                	jae    804833f <_init-0x179>
- 80482da:	74 61                	je     804833d <_init-0x17b>
- 80482dc:	66 66 69 6e 69 74 79 	imul   $0x7974,0x69(%esi),%bp
- 80482e3:	5f                   	pop    %edi
- 80482e4:	6e                   	outsb  %ds:(%esi),(%dx)
- 80482e5:	70 00                	jo     80482e7 <_init-0x1d1>
- 80482e7:	70 74                	jo     804835d <_init-0x15b>
- 80482e9:	68 72 65 61 64       	push   $0x64616572
- 80482ee:	5f                   	pop    %edi
- 80482ef:	6a 6f                	push   $0x6f
- 80482f1:	69 6e 00 6c 69 62 73 	imul   $0x7362696c,0x0(%esi),%ebp
- 80482f8:	74 64                	je     804835e <_init-0x15a>
- 80482fa:	63 2b                	arpl   %bp,(%ebx)
+ 80482d8:	6a 6f                	push   $0x6f
+ 80482da:	69 6e 00 70 74 68 72 	imul   $0x72687470,0x0(%esi),%ebp
+ 80482e1:	65                   	gs
+ 80482e2:	61                   	popa   
+ 80482e3:	64                   	fs
+ 80482e4:	5f                   	pop    %edi
+ 80482e5:	73 65                	jae    804834c <_init-0x16c>
+ 80482e7:	74 61                	je     804834a <_init-0x16e>
+ 80482e9:	66 66 69 6e 69 74 79 	imul   $0x7974,0x69(%esi),%bp
+ 80482f0:	5f                   	pop    %edi
+ 80482f1:	6e                   	outsb  %ds:(%esi),(%dx)
+ 80482f2:	70 00                	jo     80482f4 <_init-0x1c4>
+ 80482f4:	6c                   	insb   (%dx),%es:(%edi)
+ 80482f5:	69 62 73 74 64 63 2b 	imul   $0x2b636474,0x73(%edx),%esp
  80482fc:	2b 2e                	sub    (%esi),%ebp
  80482fe:	73 6f                	jae    804836f <_init-0x149>
  8048300:	2e 36 00 5f 5f       	add    %bl,%cs:%ss:0x5f(%edi)
