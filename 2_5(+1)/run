@@ -1,0 +1,3 @@
+#!/bin/bash
+g++ -O0 -lpthread dekker_mfence.c
+./a.out
