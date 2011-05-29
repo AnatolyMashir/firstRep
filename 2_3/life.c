@@ -15,7 +15,6 @@
 
 #include "iatomic.h"
 
-pthread_mutex_t mutex_lock = PTHREAD_MUTEX_INITIALIZER; 
 const char *printfErrorMessage = "some trouble with printf";
 const char *getAffinityMessage = "some trouble with get affinity";
 int ***matrs;
@@ -141,15 +140,11 @@ void reBild(int current, int next)
 void handler(int signal, siginfo_t *info, void *something)
 {
 	fprintf(stdout, "%s\n","recount");
-	if(pthread_mutex_lock(&mutex_lock))
-		errorServer("i can't lock mutex");
 	int tmp = ATOMIC_INIT(atomic_read(&next));
 	if(atomic_sub_and_test( tmp, &lock ))
 	{
 		atomic_set(&lock, (atomic_read(&next)+1)%3);
 	}	
-	if(pthread_mutex_unlock(&mutex_lock))
-		errorServer("i can't unlock mutex");
 	reBild(atomic_read(&current), atomic_read(&next));
 	alarm(1);
 	atomic_set(&current, atomic_read(&next));
@@ -169,11 +164,7 @@ void *bildLife(void *args)
 	{
 		if(atomic_read(&lock)==ask)				
 		{			
-			if(pthread_mutex_lock(&mutex_lock))
-				errorServer("i can't lock mutex");
 			atomic_set(&lock,atomic_read(&current));
-			if(pthread_mutex_unlock(&mutex_lock))
-				errorServer("i can't unlock mutex");
 		}							
 	}
 	signal (SIGALRM, SIG_DFL);
@@ -251,8 +242,6 @@ int main(int argc,char *argv[])
     if (pthread_join(thread1, NULL) || pthread_join(thread2, NULL))
 		errorMain("i can't join thread");
 	freeMatr(2, count-1);
-	if(pthread_mutex_destroy(&mutex_lock))
-		errorMain("i can't destroy mutex");
     return EXIT_SUCCESS;
 }
 
