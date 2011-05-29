@@ -17,6 +17,15 @@ guarantees that every load and store instruction that precedes in program order 
 is globally visible before any load or store instruction that follows the MFENCE instruction is globally visible
 
 Остальное чуток переделал. На atomic не смотрите - я просто развлекаюсь)
+if(atomic_sub_and_test( tmp, &lock ))
+{
+	atomic_set(&lock, (atomic_read(&next)+1)%3);
+}
+этот код пройдет 2 раза, при том что код 
+atomic_set(&lock,atomic_read(&current));
+выполнится 1 раз - за счет того что мы идем по кольцевому буферу из 3х элементов. В этой задаче не нужны вообще никакие
+локи, даже без атомарных операций.
+П.С специально для вас сделал атомарную проверку)	
 __________________________________________________________________________
 Вы наверное недоумеваете, почему один и тот же файлик распихан по всем папкам?
 А потому что иначе вы файлик readme не видите в упор, игнорируете сообщения в гихабе и на почту.
