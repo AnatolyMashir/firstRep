@@ -13,16 +13,17 @@
 #define quit 10
 #define error 11
 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 
+#include "iatomic.h"
+
 pthread_mutex_t mutex_lock = PTHREAD_MUTEX_INITIALIZER; 
 const char *printfErrorMessage = "some trouble with printf";
 const char *getAffinityMessage = "some trouble with get affinity";
 int ***matrs;
-volatile char lock=none;
+atomic_t lock ATOMIC_INIT(none);
+atomic_t current ATOMIC_INIT(0);
+atomic_t next ATOMIC_INIT(1);
 volatile int count;
-int current=0, next=1;
 char key;
-char bad = 'e';
 
 int mygetch( ) 
 {
@@ -47,16 +48,16 @@ void errorMain(const char *msg)
 void errorUser(const char *msg)
 {
     perror(msg);
-    lock=quit;
-	pthread_exit(&bad);
+    atomic_set(&lock, quit);
+	pthread_exit(NULL);
 }
 
 void errorServer(const char *msg)
 {
     perror(msg);
-	lock=error;	
+	atomic_set(&lock, error);
 	signal (SIGALRM, SIG_DFL); // чтобы ваша душа была спокойна
-	pthread_exit(&bad);
+	pthread_exit(NULL);
 }
 
 static void *userInt(void *args)
@@ -65,19 +66,15 @@ static void *userInt(void *args)
 	key = mygetch();
 	while(key!='q')
 	{
-		if(pthread_mutex_lock(&mutex)) // почему лок тут и вообще зачем см. ниже
-			errorUser("i can't lock mutex");
-		lock=ask;
-		if(pthread_mutex_unlock(&mutex))
-			errorUser("i can't unlock mutex");
-		while(lock==ask);
-		if(lock<3)
+		atomic_set( &lock, ask);
+		while(atomic_read(&lock)==ask);
+		if(atomic_read(&lock)<3)
 		{
 			for(i=0;  i<count; i++)
 			{
 				for(j=0;  j<count; j++)
 				{
-					if(printf("%c", matrs[lock][i][j])==-1)
+					if(printf("%c", matrs[atomic_read(&lock)][i][j])==-1)
 						errorUser(printfErrorMessage);
 				}
 				if(printf("\n")==-1)
@@ -85,7 +82,7 @@ static void *userInt(void *args)
 			}
 			if(printf("\n")==-1)
 				errorUser(printfErrorMessage);
-			lock=none;
+			atomic_set(&lock, none);
 			key = mygetch();
 		}
 		else
@@ -93,7 +90,7 @@ static void *userInt(void *args)
 			key='q';
 		}
 	}
-	lock=quit;
+	atomic_set(&lock, quit);
 }
  
 char reCount(int i, int j, int current)
@@ -132,17 +129,6 @@ char reCount(int i, int j, int current)
 void reBild(int current, int next)
 {
 	int i, j;
-	/*
-	for(i=0;  i<count; i++)
-	{
-		for(j=0;  j<count; j++)
-		{
-			printf("%c", matrs[current][i][j]);
-			
-		}
-		printf("\n");
-	}
-	printf("\n");*/
 	for(i=0;  i<count; i++)
 	{
 		for(j=0;  j<count; j++)
@@ -152,46 +138,43 @@ void reBild(int current, int next)
 	}
 }
 
-void handler()
+void handler(int signal, siginfo_t *info, void *something)
 {
 	fprintf(stdout, "%s\n","recount");
 	if(pthread_mutex_lock(&mutex_lock))
 		errorServer("i can't lock mutex");
-	if(next==lock)
+	int tmp = ATOMIC_INIT(atomic_read(&next));
+	if(atomic_sub_and_test( tmp, &lock ))
 	{
-		next=(next+1)%3;
+		atomic_set(&lock, (atomic_read(&next)+1)%3);
 	}	
 	if(pthread_mutex_unlock(&mutex_lock))
 		errorServer("i can't unlock mutex");
-	reBild(current, next);
+	reBild(atomic_read(&current), atomic_read(&next));
 	alarm(1);
-	signal (SIGALRM, &handler);
-	current=next;
+	atomic_set(&current, atomic_read(&next));
 }
 
 void *bildLife(void *args)
 {	
-	handler();
-	while(lock!=quit)
+	struct sigaction S;
+	S.sa_sigaction = handler;
+	sigfillset(&S.sa_mask);
+	if(sigfillset(&S.sa_mask))
+		errorServer("some trouble with mask");
+	if(sigaction(SIGALRM, &S, NULL))
+		errorServer("I can't set signal");
+	alarm(1);
+	while(atomic_read(&lock)!=quit)
 	{
-		if(pthread_mutex_lock(&mutex))
-			errorServer("i can't lock mutex");
-		/*о том почему сдесь стоит мьютекс, вообще он тут не нужен т.к. потоки не конкурентные
-		когда 1 пишет 2ой всегда читает, причем юзер ставится в активное ожидание - да я в 
-		курсе что вы этого не любите :-) а лок юзается для принудительного обновления кэша
-		(если вдруг, а скорее всего так оно и есть, переменная ушла в кэш процессора)	
-		в данной задаче этот лок ни на что не влияет, кроме возможного времени отклика клиента
-		вообще этот лок появился как результат опыта написания многопользовательской жизни*/
-		if(lock==ask)				
-		{						
+		if(atomic_read(&lock)==ask)				
+		{			
 			if(pthread_mutex_lock(&mutex_lock))
 				errorServer("i can't lock mutex");
-			lock=current;			
+			atomic_set(&lock,atomic_read(&current));
 			if(pthread_mutex_unlock(&mutex_lock))
 				errorServer("i can't unlock mutex");
 		}							
-		if(pthread_mutex_unlock(&mutex))  
-			errorServer("i can't unlock mutex");
 	}
 	signal (SIGALRM, SIG_DFL);
 }
@@ -268,7 +251,7 @@ int main(int argc,char *argv[])
     if (pthread_join(thread1, NULL) || pthread_join(thread2, NULL))
 		errorMain("i can't join thread");
 	freeMatr(2, count-1);
-	if(pthread_mutex_destroy(&mutex) || pthread_mutex_destroy(&mutex_lock))
+	if(pthread_mutex_destroy(&mutex_lock))
 		errorMain("i can't destroy mutex");
     return EXIT_SUCCESS;
 }
